@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { Navbar, Form, Tabs, Tab, Row, Col, Container, Accordion, Card } from 'react-bootstrap';
+import { Navbar, Tabs, Tab, Row, Col, Container, Accordion, Card } from 'react-bootstrap';
 import { Workspace, WorkspaceProps, DemoDataProvider, SerializedDiagram, LayoutLink, LayoutElement, LinkTypeIri } from 'ontodia';
 
 import { InputTemplate, NULLSTR } from './utils';
@@ -20,9 +20,10 @@ import { CentrifugeComponent } from './centrifuge/centrifuge';
 import { dataModel } from './data-model';
 
 import { Link } from 'react-router-dom';
+import { GrateSource } from './grate/grate-resources';
 
 interface State {
-	deviceWatcher: number;
+	isOpenScheme: boolean;
 	secondMaxFlow: number;
 	dailyWaterFlow: number;
 	countMode: boolean;
@@ -48,7 +49,7 @@ export class GeneralComponent extends React.Component<{}, State> {
 		super(props, context);
 
 		this.state = {
-			deviceWatcher: 0,
+			isOpenScheme: false,
 			secondMaxFlow: undefined,
 			dailyWaterFlow: undefined,
 			countMode: false,
@@ -58,16 +59,12 @@ export class GeneralComponent extends React.Component<{}, State> {
 		};
 	}
 
-	componentWillUnmount() {
-		this.setState({ deviceWatcher: 0 });
-	}
-
 	componentDidUpdate(prevProps: {}, prevState: State) {
-		const { deviceDiagram } = this.state;
+		const { deviceDiagram, isOpenScheme } = this.state;
 		const isNewData = !prevState.deviceDiagram && deviceDiagram;
 		const isUpdatedData = deviceDiagram && prevState.deviceDiagram &&
 			(prevState.deviceDiagram.layoutData.elements !== deviceDiagram.layoutData.elements);
-		if (isNewData || isUpdatedData) {
+		if (isOpenScheme && (isNewData || isUpdatedData)) {
 			this.workspace.getModel().importLayout({
 				diagram: this.state.deviceDiagram,
 				dataProvider: new DemoDataProvider(
@@ -105,7 +102,7 @@ export class GeneralComponent extends React.Component<{}, State> {
 			<Row className={'justify-content-md-center general-container'}>
 				<Col xs lg='12'>
 					<h4 className={'general-title'}>
-						Выберите очистные сооружения для расчетный схемы
+						Выберите сооружения для расчета
 					</h4>
 					{list}
 				</Col>
@@ -117,11 +114,12 @@ export class GeneralComponent extends React.Component<{}, State> {
 		const { dailyWaterFlow, secondMaxFlow } = this.state;
 		const minValueOfDailyWaterFlow = Math.min(...device.listOfTypes.map(type => type.minDailyWaterFlow));
 		const maxValueOfDailyWaterFlow = Math.max(...device.listOfTypes.map(type => type.maxDailyWaterFlow));
-		const errorOfMinWaterFlow = new Error('Суточный расход воды слишком мал/велик, и использование данного оборудования нецелесообразно');
+		const errorOfMinWaterFlow = new Error(`Суточный расход воды слишком мал/велик,
+			и использование данного оборудования нецелесообразно`);
 		return (
 			<div>
 				{(device.key === KindOfDevices.sandTrap || device.key === KindOfDevices.sump)
-					&& dailyWaterFlow && (dailyWaterFlow < minValueOfDailyWaterFlow || dailyWaterFlow > maxValueOfDailyWaterFlow)
+					&& dailyWaterFlow && (dailyWaterFlow <= minValueOfDailyWaterFlow || dailyWaterFlow >= maxValueOfDailyWaterFlow)
 					? <ErrorAlert errorValue={errorOfMinWaterFlow} />
 					: <div>
 						{device.listOfTypes.map((type, index) => {
@@ -135,6 +133,16 @@ export class GeneralComponent extends React.Component<{}, State> {
 								}
 								if (type.key === CentrifugeTypes.determinate && secondMaxFlow > 0.0056) {
 									return null;
+								}
+							}
+							if (device.key === KindOfDevices.grate) {
+								if (type.key === GrateTypes.crusher) {
+									const grateCrusher = GrateSource.grateCrushers[0];
+									const amountOfGrateCrusher = Math.ceil(secondMaxFlow / (grateCrusher.maxPerformance / 3600));
+									const realWaterSpeedInSection = secondMaxFlow / (grateCrusher.squareHeliumHole * amountOfGrateCrusher);
+									if (realWaterSpeedInSection < grateCrusher.speedWater.min || realWaterSpeedInSection > grateCrusher.speedWater.max) {
+										return null;
+									}
 								}
 							}
 							return <label className={'radio'} key={`${device.key}-${type.key}-${index}`}>{type.name}
@@ -151,7 +159,6 @@ export class GeneralComponent extends React.Component<{}, State> {
 	}
 
 	private selectType = (event: React.ChangeEvent<HTMLInputElement>, device: Device, type: DeviceType) => {
-		let { deviceWatcher } = this.state;
 		const clearTypesExceptCurrent = (listOfTypes: DeviceType[]) => {
 			listOfTypes.forEach(typeOfDevice => {
 				if (typeOfDevice.ref && typeOfDevice.ref.checked && typeOfDevice.key !== type.key) {
@@ -163,12 +170,11 @@ export class GeneralComponent extends React.Component<{}, State> {
 			clearTypesExceptCurrent(device.listOfTypes);
 			device.selected = true;
 			device.selectedType = { iri: type.iri, key: type.key, name: type.name };
-			this.updateDiagram();
 		} else {
 			device.selected = false;
 			device.selectedType = { iri: undefined, key: undefined, name: '' };
 		}
-		this.setState({ deviceWatcher: deviceWatcher++ });
+		this.updateDiagram();
 	}
 
 	private renderBaseInput = () => {
@@ -176,6 +182,7 @@ export class GeneralComponent extends React.Component<{}, State> {
 			<Row className={'justify-content-md-center general-container'} style={{ flexDirection: 'row' }}>
 				<Col xs lg='6'>
 					<InputTemplate title={'Максимальный секундный расход сточной воды, м³/с'}
+						range={{ minValue: 0, maxValue: Infinity }}
 						placeholder={'Введите максимальный секундный расход...'}
 						onErrorExist={(isError) => { this.setState({ isValidateError: isError }); }}
 						onInputRef={(input) => { this.maxSecondFlowRef = input; }}
@@ -205,6 +212,7 @@ export class GeneralComponent extends React.Component<{}, State> {
 	}
 
 	private renderOntodia() {
+		const {isOpenScheme} = this.state;
 		const workspaceProps: WorkspaceProps & React.ClassAttributes<Workspace> = {
 			ref: this.onWorkspaceMounted,
 		};
@@ -212,21 +220,30 @@ export class GeneralComponent extends React.Component<{}, State> {
 			<Container>
 				<Row className={'justify-content-md-center general-container'}>
 					<Col xs lg='12'>
-						<h4 className={'general-title'}>Схема очистных сооружений</h4>
+						<button className={'btn btn-primary general-title'} style={{cursor: 'pointer'}}
+						onClick={() => {
+							this.setState({isOpenScheme: !isOpenScheme});
+						}}>
+							Схема очистных сооружений
+							{!isOpenScheme ? <span className={'fa fa-chevron-down'} style={{paddingLeft: '1rem'}}></span> : null}
+							{isOpenScheme ? <span className={'fa fa-chevron-up'} style={{paddingLeft: '1rem'}}></span> : null}
+						</button>
 					</Col>
 				</Row>
 			</Container>
-			<div className={'ontodia-container'}>
-				<Workspace
-					key={'general-page-ontodia'}
-					ref={workspaceProps ? workspaceProps.ref : undefined}
-					leftPanelInitiallyOpen={false}
-					rightPanelInitiallyOpen={false}
-					hidePanels={true}
-					hideScrollBars={true}
-					hideTutorial={true}
-				></Workspace>
-			</div>
+			{isOpenScheme
+				? <div className={'ontodia-container'}>
+					<Workspace
+						key={'general-page-ontodia'}
+						ref={workspaceProps ? workspaceProps.ref : undefined}
+						leftPanelInitiallyOpen={false}
+						rightPanelInitiallyOpen={false}
+						hidePanels={true}
+						hideScrollBars={true}
+						hideTutorial={true}
+					></Workspace>
+				</div>
+				: null}
 		</div>;
 	}
 
@@ -414,8 +431,8 @@ export class GeneralComponent extends React.Component<{}, State> {
 			countMode: false,
 			dailyWaterFlow: undefined,
 			secondMaxFlow: undefined,
-			deviceWatcher: 0,
 			isValidateError: false,
+			isOpenScheme: false,
 		});
 	}
 
@@ -514,13 +531,15 @@ export class GeneralComponent extends React.Component<{}, State> {
 	render() {
 		const { countMode, resultMode } = this.state;
 		return <div>
-			<Navbar bg='primary' variant='dark'>
-				<Link to={'/'}>
-					<div onClick={this.onStartPage} className='base-image'></div>
-				</Link>
-				<Navbar.Brand className='app-title' onClick={this.onStartPage}>
-					Подбор оборудования механической очистки сточных вод
-				</Navbar.Brand>
+			<Navbar bg='primary' variant='dark' className='title-navbar'>
+				<div className='intro-navbar-counting'>
+					<Link to={'/'} className='link-to-start'>
+						<div onClick={this.onStartPage} className='base-image' title='Главная страница'></div>
+					</Link>
+					<Navbar.Brand className='app-title' title='Выбор очистных сооружений для расчета'>
+						Подбор сооружений механической очистки сточных вод
+					</Navbar.Brand>
+				</div>
 			</Navbar>
 			{
 				countMode

@@ -7,7 +7,7 @@ import { Table } from 'react-bootstrap';
 import { dataModel, FilterResultData } from '../data-model';
 import { FilterSource } from './filter-resource';
 import { ErrorAlert } from '../error/error';
-import { renderCheckingButton, renderToolbar } from '../grate/grate';
+import { renderCheckingButton, renderToolbar, renderBaseData } from '../grate/grate';
 
 export interface FilterProps {
 	secondMaxFlow: number;
@@ -35,6 +35,8 @@ interface FilterState {
 	workStationPeriod: number;
 	isValidateError: boolean;
 	isResult: boolean;
+	showChangeScheme: boolean;
+	showOpenResult: boolean;
 }
 
 export class FilterComponent extends React.Component<FilterProps, FilterState> {
@@ -118,6 +120,8 @@ export class FilterComponent extends React.Component<FilterProps, FilterState> {
 			workStationPeriod: undefined,
 			isValidateError: false,
 			isResult: false,
+			showChangeScheme: false,
+			showOpenResult: false,
 		};
 	}
 
@@ -158,6 +162,8 @@ export class FilterComponent extends React.Component<FilterProps, FilterState> {
 			workStationPeriod: undefined,
 			isValidateError: false,
 			isResult: false,
+			showChangeScheme: false,
+			showOpenResult: false,
 		});
 		this.isGrainy = false;
 		this.isSwimPressure = false;
@@ -184,11 +190,11 @@ export class FilterComponent extends React.Component<FilterProps, FilterState> {
 					? FilterSource.FilterGlobalTypes.microFilter
 					: FilterSource.FilterGlobalTypes.drumNets,
 			levelOfBPKClean: {
-				value: this.levelOfCleanBPK ? Number(this.levelOfCleanBPK.toFixed(3)) : undefined,
+				value: this.levelOfCleanBPK ? Number(this.levelOfCleanBPK.toFixed(2)) : undefined,
 				label: 'Уровень очистки для БПК, %'
 			},
 			levelOfSubstanceClean: {
-				value: this.levelOfCleanSubstance ? Number(this.levelOfCleanSubstance.toFixed(3)) : undefined,
+				value: this.levelOfCleanSubstance ? Number(this.levelOfCleanSubstance.toFixed(2)) : undefined,
 				label: 'Уровень очистки для взвешенных веществ, %'
 			},
 			grainyAndSwimLoad: {
@@ -196,41 +202,41 @@ export class FilterComponent extends React.Component<FilterProps, FilterState> {
 				amountOfFilterClean: {value: this.amountOfFilterClean, label: 'Количество промывок каждого фильтра за сутки, раз'},
 				amountOfFilters: {value: this.amountOfFilterSection, label: 'Число секций фильтров, шт'},
 				commonFilterSquare: {
-					value: this.filterSquare ? Number(this.filterSquare.toFixed(3)) : undefined,
+					value: this.filterSquare ? Number(this.filterSquare.toFixed(1)) : undefined,
 					label: 'Общая площадь фильтров, м²'
 				},
 				countingWaterFlow: {
-					value: this.countingWaterFlow ? Number(this.countingWaterFlow.toFixed(3)) : undefined,
+					value: this.countingWaterFlow ? Number(this.countingWaterFlow.toFixed(1)) : undefined,
 					label: 'Расчетный расход сточной воды подаваемой на фильтры, м³/сут'
 				},
 				filterCyclePeriod: {value: filterCyclePeriod, label: 'Продолжительность фильтроцикла, ч'},
 				filterSectionSquare: {
-					value: this.filterSectionSquare ? Number(this.filterSectionSquare.toFixed(3)) : undefined,
+					value: this.filterSectionSquare ? Number(this.filterSectionSquare.toFixed(2)) : undefined,
 					label: 'Площадь каждой секции, м²'
 				},
 				forcedWaterSpeed: {
-					value: this.forcedWaterSpeed ? Number(this.forcedWaterSpeed.toFixed(3)) : undefined,
+					value: this.forcedWaterSpeed ? Number(this.forcedWaterSpeed.toFixed(2)) : undefined,
 					label: 'Скорость фильтрования воды при форсированном режиме, м/с'
 				},
 				waterSpeed: {value: waterSpeed, label: 'Скорость фильтрования воды при нормальном режиме, м/с'},
 				onlyGrainyVariable: {
 					t1: {value: onlyGrainy.t1, label: 'Продолжительность начального взрыхления, мин'},
-					t2: {value: onlyGrainy.t2, label: 'Продолжительность промывки(t2), мин'},
-					t3: {value: onlyGrainy.t3, label: 'Продолжительность промывки(t3), мин'},
-					w1: {value: onlyGrainy.w1, label: 'Интенсивность начального взрыхления верхнего слоя, л/(с*м²)'},
-					w2: {value: onlyGrainy.w2, label: 'Интенсивность промывки водой(w2), л/(с*м²)'},
-					w3: {value: onlyGrainy.w3, label: 'Интенсивность промывки водой(w3), л/(с*м²)'},
+					t2: {value: onlyGrainy.t2, label: 'Продолжительность промывки(t₂), мин'},
+					t3: {value: onlyGrainy.t3, label: 'Продолжительность промывки(t₃), мин'},
+					w1: {value: onlyGrainy.w1, label: 'Интенсивность начального взрыхления верхнего слоя, л/(с·м²)'},
+					w2: {value: onlyGrainy.w2, label: 'Интенсивность промывки водой(w₂), л/(с·м²)'},
+					w3: {value: onlyGrainy.w3, label: 'Интенсивность промывки водой(w₃), л/(с·м²)'},
 				},
 			},
 			microFilter: {
 				amountOfAdditionalFilters: {value: this.amountOfAdditionalFilters, label: 'Количество резервных микрофильтров, шт'},
 				amountOfMicroFilters: {value: this.amountOfFilterSection, label: 'Количество микрофильтров, шт'},
 				commonFilterSquare: {
-					value: this.filterSquare ? Number(this.filterSquare.toFixed(3)) : undefined,
+					value: this.filterSquare ? Number(this.filterSquare.toFixed(2)) : undefined,
 					label: 'Площадь фильтрующей поверхности микрофильтра, м²'
 				},
 				dailyAmountOfWasteWater: {
-					value: this.dailyAmountOfWasteWater ? Number(this.dailyAmountOfWasteWater.toFixed(3)) : undefined,
+					value: this.dailyAmountOfWasteWater ? Number(this.dailyAmountOfWasteWater.toFixed(2)) : undefined,
 					label: 'Суточное количество промывной воды, м³/сут'
 				},
 				microFilter: this.currentMicroFilter,
@@ -239,7 +245,7 @@ export class FilterComponent extends React.Component<FilterProps, FilterState> {
 				amountOfAdditionalFilters: {value: this.amountOfAdditionalFilters, label: 'Количество резервных барабанных сеток, шт'},
 				amountOfDrumNets: {value: this.amountOfFilterSection, label: 'Количество барабанных сеток, шт'},
 				dailyAmountOfWasteWater: {
-					value: this.dailyAmountOfWasteWater ? Number(this.dailyAmountOfWasteWater.toFixed(3)) : undefined,
+					value: this.dailyAmountOfWasteWater ? Number(this.dailyAmountOfWasteWater.toFixed(2)) : undefined,
 					label: 'Суточное количество промывной воды, м³/сут'
 				},
 				drumNet: this.currentDrumNet,
@@ -248,18 +254,12 @@ export class FilterComponent extends React.Component<FilterProps, FilterState> {
 		dataModel.setFilterResult(this.filterResult);
 	}
 
-	private renderBaseData = () => {
-		const { secondMaxFlow, dailyWaterFlow } = this.props;
-		return <div>
-			<div className={'input-data-title'}>Входные данные</div>
-			{labelTemplate('Секундный максимальный расход', secondMaxFlow)}
-			{labelTemplate('Суточный расход сточных вод, м³/сут', dailyWaterFlow)}
-		</div>;
-	}
-
 	private renderInputArea = () => {
-		const { type } = this.props;
 		const { baseSubstanceConcentrate, baseBPKConcentrate, filteringSpeed } = this.state;
+		const baseBPKConcentrateTitle = <span>Начальная концентрация БПК<sub>полн</sub> в сточной воде, мг/л</span>;
+		const finalBPKConcentrateTitle = <span>
+			Допустимая конечная концентрация БПК<sub>полн</sub> в осветленной воде, мг/л диапазон [0 - {baseBPKConcentrate}]
+		</span>;
 		return (
 			<>
 				<InputTemplate title={`Начальная концентрация взвешенных веществ в сточной воде, мг/л`}
@@ -274,7 +274,7 @@ export class FilterComponent extends React.Component<FilterProps, FilterState> {
 
 				{baseSubstanceConcentrate
 					? <InputTemplate title={`Допустимая конечная концентрация взвешенных веществ в осветленной воде, мг/л,
-						диапазон[0 - ${baseSubstanceConcentrate}]`}
+						диапазон [0 - ${baseSubstanceConcentrate}]`}
 						range={{ minValue: 0, maxValue: baseSubstanceConcentrate }}
 						placeholder={'Введите допустимую конечную концентрацию...'}
 						onErrorExist={(isError) => { this.setState({ isValidateError: isError }); }}
@@ -285,7 +285,7 @@ export class FilterComponent extends React.Component<FilterProps, FilterState> {
 						}} />
 					: null}
 
-				<InputTemplate title={`Начальная концентрация БПКполн в сточной воде, мг/л`}
+				<InputTemplate title={baseBPKConcentrateTitle}
 					range={{ minValue: 0, maxValue: Infinity }}
 					placeholder={'Введите начальную концентрацию...'}
 					onErrorExist={(isError) => { this.setState({ isValidateError: isError }); }}
@@ -296,8 +296,7 @@ export class FilterComponent extends React.Component<FilterProps, FilterState> {
 					}} />
 
 				{baseBPKConcentrate
-					? <InputTemplate title={`Допустимая конечная концентрация БПКполн в осветленной воде, мг/л,
-						диапазон[0 - ${baseBPKConcentrate}]`}
+					? <InputTemplate title={finalBPKConcentrateTitle}
 						range={{ minValue: 0, maxValue: baseBPKConcentrate }}
 						placeholder={'Введите допустимую конечную концентрацию...'}
 						onErrorExist={(isError) => { this.setState({ isValidateError: isError }); }}
@@ -323,7 +322,7 @@ export class FilterComponent extends React.Component<FilterProps, FilterState> {
 							}}
 							onSelectRef={(optionList) => { this.typeOfCleanGrainyFilterListRef = optionList; }} />
 
-						<InputTemplate title={`Продолжительность работы станции в течении суток, ч, диапазон[0 - ${FilterSource.day}]`}
+						<InputTemplate title={`Продолжительность работы станции в течении суток, ч, диапазон [0 - ${FilterSource.day}]`}
 							range={{ minValue: 0, maxValue: FilterSource.day }}
 							placeholder={'Введите продолжительность работы станции...'}
 							onErrorExist={(isError) => { this.setState({ isValidateError: isError }); }}
@@ -331,20 +330,20 @@ export class FilterComponent extends React.Component<FilterProps, FilterState> {
 							onInput={(value) => { this.setState({ workStationPeriod: value }); }} />
 
 						<InputTemplate title={`Коэффициент, учитывающий расход воды на промывку барабанных сеток,
-						диапазон[${FilterSource.CoefficientDrumNetsClean.min} - ${FilterSource.CoefficientDrumNetsClean.max}]`}
+						диапазон [${FilterSource.CoefficientDrumNetsClean.min} - ${FilterSource.CoefficientDrumNetsClean.max}]`}
 							range={{ minValue: FilterSource.CoefficientDrumNetsClean.min, maxValue: FilterSource.CoefficientDrumNetsClean.max }}
 							placeholder={'Введите коэффициент...'}
 							onErrorExist={(isError) => { this.setState({ isValidateError: isError }); }}
 							onInputRef={(input) => { this.coefficientDrumNetsCleanRef = input; }}
 							onInput={(value) => { this.setState({ coefficientDrumNetsClean: value }); }} />
 
-						{this.amountOfFilterSection < FilterSource.minAmountFilterSection
+						{this.amountOfFilterSection <= FilterSource.minAmountFilterSection
 							? <ErrorAlert errorMessage={`Общее количество секций фильтров : ${this.amountOfFilterSection},
 							должно быть не меньше : ${FilterSource.minAmountFilterSection}.`} />
 							: null}
 
-						{this.currentGrainyType && this.forcedWaterSpeed > this.currentGrainyType.speedForced.max
-							? <ErrorAlert errorMessage={`Скорость фильтрования при форсированном режиме работы: ${this.forcedWaterSpeed},
+						{this.currentGrainyType && this.forcedWaterSpeed >= this.currentGrainyType.speedForced.max
+							? <ErrorAlert errorMessage={`Скорость фильтрования при форсированном режиме работы: ${this.forcedWaterSpeed.toFixed(3)},
 							должно быть меньше : ${this.currentGrainyType.speedForced.max}, иначе необходимо изменить количество рабочих фильтров.`} />
 							: null}
 					</>
@@ -356,16 +355,16 @@ export class FilterComponent extends React.Component<FilterProps, FilterState> {
 							onSelect={(value) => { this.setState({ periodFilterCycle: value as number }); }}
 							onSelectRef={(optionList) => { this.periodFilterCycleListRef = optionList; }} />
 
-						<InputTemplate title={`Скорость фильтрирования при нормальном режиме,
-							диапазон[${FilterSource.FilteringSpeedNormal.min} - ${FilterSource.FilteringSpeedNormal.max}]`}
+						<InputTemplate title={`Скорость фильтрирования при нормальном режиме, м/ч
+							диапазон [${FilterSource.FilteringSpeedNormal.min} - ${FilterSource.FilteringSpeedNormal.max}]`}
 							range={{ minValue: FilterSource.FilteringSpeedNormal.min, maxValue: FilterSource.FilteringSpeedNormal.max }}
 							placeholder={'Введите скорость фильтрирования при нормальном режиме...'}
 							onErrorExist={(isError) => { this.setState({ isValidateError: isError }); }}
 							onInputRef={(input) => { this.filteringSpeedRef = input; }}
 							onInput={(value) => { this.setState({ filteringSpeed: value }); }} />
 
-						{this.forcedWaterSpeed < (filteringSpeed * FilterSource.performanceForcedSpeed)
-							? <ErrorAlert errorMessage={`Скорость фильтрования при форсированном режиме работы: ${this.forcedWaterSpeed},
+						{this.forcedWaterSpeed >= (filteringSpeed * FilterSource.performanceForcedSpeed)
+							? <ErrorAlert errorMessage={`Скорость фильтрования при форсированном режиме работы: ${this.forcedWaterSpeed.toFixed(2)},
 							должно быть меньше : ${filteringSpeed * FilterSource.performanceForcedSpeed},
 							иначе необходимо изменить количество рабочих фильтров.`} />
 							: null}
@@ -375,7 +374,7 @@ export class FilterComponent extends React.Component<FilterProps, FilterState> {
 				{this.isMicroFilter
 					? <>
 						<InputTemplate title={`Коэффициент, учитывающий увеличение производительности микрофильтров,
-							диапазон[${FilterSource.CoefficientIncreasePerformance.min} - ${FilterSource.CoefficientIncreasePerformance.max}]`}
+							диапазон [${FilterSource.CoefficientIncreasePerformance.min} - ${FilterSource.CoefficientIncreasePerformance.max}]`}
 							range={{ minValue: FilterSource.CoefficientIncreasePerformance.min, maxValue: FilterSource.CoefficientIncreasePerformance.max }}
 							placeholder={'Введите коэффициент...'}
 							onErrorExist={(isError) => { this.setState({ isValidateError: isError }); }}
@@ -394,7 +393,7 @@ export class FilterComponent extends React.Component<FilterProps, FilterState> {
 							onSelectRef={(optionList) => { this.dumpDeepListRef = optionList; }} />
 
 						<InputTemplate title={`Скорость фильтрования, м/ч,
-							диапазон[${FilterSource.MicroFilterSpeedFiltering.min} - ${FilterSource.MicroFilterSpeedFiltering.max}]`}
+							диапазон [${FilterSource.MicroFilterSpeedFiltering.min} - ${FilterSource.MicroFilterSpeedFiltering.max}]`}
 							range={{ minValue: FilterSource.MicroFilterSpeedFiltering.min, maxValue: FilterSource.MicroFilterSpeedFiltering.max }}
 							placeholder={'Введите коэффициент...'}
 							onErrorExist={(isError) => { this.setState({ isValidateError: isError }); }}
@@ -404,7 +403,7 @@ export class FilterComponent extends React.Component<FilterProps, FilterState> {
 								this.setState({ filteringSpeed: value });
 							}} />
 
-						<InputTemplate title={`Период работы станции в течении суток, ч, диапазон[0 - 24]`}
+						<InputTemplate title={`Период работы станции в течении суток, ч, диапазон [0 - 24]`}
 							range={{ minValue: 0, maxValue: 24 }}
 							placeholder={'Введите период работы станции...'}
 							onErrorExist={(isError) => { this.setState({ isValidateError: isError }); }}
@@ -438,7 +437,7 @@ export class FilterComponent extends React.Component<FilterProps, FilterState> {
 							: null}
 
 						<InputTemplate title={`Количество промывок в сутки, шт,
-							диапазон[${FilterSource.AmountFilterWaterClean.min} - ${FilterSource.AmountFilterWaterClean.max}]`}
+							диапазон [${FilterSource.AmountFilterWaterClean.min} - ${FilterSource.AmountFilterWaterClean.max}]`}
 							range={{ minValue: FilterSource.AmountFilterWaterClean.min, maxValue: FilterSource.AmountFilterWaterClean.max }}
 							placeholder={'Введите количество промывок...'}
 							onErrorExist={(isError) => { this.setState({ isValidateError: isError }); }}
@@ -446,7 +445,7 @@ export class FilterComponent extends React.Component<FilterProps, FilterState> {
 							onInput={(value) => { this.setState({ amountOfWaterClean: value }); }} />
 
 						<InputTemplate title={`Расход промывной воды, %,
-							диапазон[${FilterSource.CleanWaterFlow.min} - ${FilterSource.CleanWaterFlow.max}]`}
+							диапазон [${FilterSource.CleanWaterFlow.min} - ${FilterSource.CleanWaterFlow.max}]`}
 							range={{ minValue: FilterSource.CleanWaterFlow.min, maxValue: FilterSource.CleanWaterFlow.max }}
 							placeholder={'Введите расход промывной воды...'}
 							onErrorExist={(isError) => { this.setState({ isValidateError: isError }); }}
@@ -498,6 +497,11 @@ export class FilterComponent extends React.Component<FilterProps, FilterState> {
 				}
 			}
 		});
+		this.isGrainy = false;
+		this.isSwimPressure = false;
+		this.isMicroFilter = false;
+		this.isDrumNets = false;
+		resetSelectToDefault(this.filterTypesListRef, this.filterTypesList);
 	}
 
 	private selectCurrentFilterType = (filterType: FilterSource.FilterTypes) => {
@@ -606,6 +610,7 @@ export class FilterComponent extends React.Component<FilterProps, FilterState> {
 			iri: undefined,
 			mark: undefined,
 		});
+
 	}
 
 	private filterDrumNets = () => {
@@ -752,8 +757,25 @@ export class FilterComponent extends React.Component<FilterProps, FilterState> {
 		this.props.onResultMode(true);
 	}
 
+	private openChangeScheme = () => {
+		this.setState({showChangeScheme: true});
+	}
+
+	private closeChangeScheme = () => {
+		this.setState({showChangeScheme: false});
+	}
+
+	private openShowResult = () => {
+		this.setState({showOpenResult: true});
+	}
+
+	private closeShowResult = () => {
+		this.setState({showOpenResult: false});
+	}
+
 	render() {
-		const { type } = this.props;
+		const { secondMaxFlow, dailyWaterFlow } = this.props;
+		const { showChangeScheme, showOpenResult } = this.state;
 		return (
 			<>
 				<div className={'title-container'}>
@@ -761,11 +783,17 @@ export class FilterComponent extends React.Component<FilterProps, FilterState> {
 					{renderToolbar(
 						this.returnToScheme,
 						this.goToResult,
+						this.openChangeScheme,
+						this.closeChangeScheme,
+						this.openShowResult,
+						this.closeShowResult,
+						showChangeScheme,
+						showOpenResult,
 					)}
 				</div>
 				<div className={'device-container'}>
 					<div className={'device-input'}>
-						{this.renderBaseData()}
+						{renderBaseData(secondMaxFlow, dailyWaterFlow)}
 						{this.renderInputArea()}
 					</div>
 					<div className={'device-result'}>

@@ -6,7 +6,7 @@ import { dataModel, OilTrapResultData } from '../data-model';
 import { OilTrapSource } from './oilTrap-resource';
 import { selectValueFromDiapason } from '../sump/sump';
 import { ErrorAlert } from '../error/error';
-import { renderCheckingButton, renderToolbar } from '../grate/grate';
+import { renderCheckingButton, renderToolbar, renderBaseData } from '../grate/grate';
 
 export interface OilTrapProps {
 	secondMaxFlow: number;
@@ -30,6 +30,8 @@ interface OilTrapState {
 	mechanicImpurity: number;
 	isValidateError: boolean;
 	isResult: boolean;
+	showChangeScheme: boolean;
+	showOpenResult: boolean;
 }
 
 export class OilTrapComponent extends React.Component<OilTrapProps, OilTrapState> {
@@ -79,6 +81,8 @@ export class OilTrapComponent extends React.Component<OilTrapProps, OilTrapState
 			mechanicImpurity: undefined,
 			isValidateError: false,
 			isResult: false,
+			showChangeScheme: false,
+			showOpenResult: false,
 		};
 	}
 
@@ -107,6 +111,8 @@ export class OilTrapComponent extends React.Component<OilTrapProps, OilTrapState
 			sedimentType: undefined,
 			isValidateError: false,
 			isResult: false,
+			showChangeScheme: false,
+			showOpenResult: false,
 		});
 	}
 
@@ -123,11 +129,11 @@ export class OilTrapComponent extends React.Component<OilTrapProps, OilTrapState
 				label: 'Глубина отстаиваемого слоя, м'
 			},
 			amountOfSediment: {
-				value: this.amountOfSediment ? Number(this.amountOfSediment.toFixed(3)) : undefined,
+				value: this.amountOfSediment ? Number(this.amountOfSediment.toFixed(2)) : undefined,
 				label: 'Количество осадка, м³/сут'
 			},
 			amountOfOilProduct: {
-				value: this.amountOfOilProduct ? Number(this.amountOfOilProduct.toFixed(3)) : undefined,
+				value: this.amountOfOilProduct ? Number(this.amountOfOilProduct.toFixed(2)) : undefined,
 				label: 'Количество нефтепродуктов, м³/сут'
 			},
 			horizontal: {
@@ -137,28 +143,19 @@ export class OilTrapComponent extends React.Component<OilTrapProps, OilTrapState
 				},
 				sumpPartLengthOfOilTrap: {value: this.sumpPartLengthOfOilTrap, label: 'Длина отстойной части нефтеловушки, м'},
 				layPeriod: {
-					value: this.layPeriod ? Number(this.layPeriod.toFixed(3)) : undefined,
+					value: this.layPeriod ? Number(this.layPeriod.toFixed(2)) : undefined,
 					label: 'Продолжительность отстаивания, ч'
 				},
 			},
 			radial: {
 				oilTrapDiameter: {value: this.oilTrapDiameter, label: 'Диаметр нефтеловушки, м'},
 				fullOilTrapHeight: {
-					value: this.fullOilTrapHeight ? Number(this.fullOilTrapHeight.toFixed(3)) : undefined,
+					value: this.fullOilTrapHeight ? Number(this.fullOilTrapHeight.toFixed(2)) : undefined,
 					label: 'Полная строительная высота нефтеловушки, м'
 				},
 			}
 		};
 		dataModel.setOilTrapResult(this.oilTrapResult);
-	}
-
-	private renderBaseData = () => {
-		const { secondMaxFlow, dailyWaterFlow } = this.props;
-		return <div>
-			<div className={'input-data-title'}>Входные данные</div>
-			{labelTemplate('Секундный максимальный расход', secondMaxFlow)}
-			{labelTemplate('Суточный расход сточных вод, м³/сут', dailyWaterFlow)}
-		</div>;
 	}
 
 	private renderInputArea = () => {
@@ -167,7 +164,7 @@ export class OilTrapComponent extends React.Component<OilTrapProps, OilTrapState
 		return (
 			<>
 				<InputTemplate title={`Количество секций нефтеловушки, шт,
-					диапазон[${type === OilTrapTypes.horizontal
+					диапазон [${type === OilTrapTypes.horizontal
 						? OilTrapSource.minAmountOfSection.horizontal
 						: OilTrapSource.minAmountOfSection.radial} - n]`}
 					range={{
@@ -182,14 +179,14 @@ export class OilTrapComponent extends React.Component<OilTrapProps, OilTrapState
 
 				{secondMaxFlow < OilTrapSource.capacityMark && type === OilTrapTypes.horizontal
 					? <>
-						<InputTemplate title={`Ширина секции, м, диапазон[${OilTrapSource.SectionWidth.min} - ${OilTrapSource.SectionWidth.max}]`}
+						<InputTemplate title={`Ширина секции, м, диапазон [${OilTrapSource.SectionWidth.min} - ${OilTrapSource.SectionWidth.max}]`}
 							range={{ minValue: OilTrapSource.SectionWidth.min, maxValue: OilTrapSource.SectionWidth.max }}
 							placeholder={'Введите ширину секции...'}
 							onErrorExist={(isError) => { this.setState({ isValidateError: isError }); }}
 							onInputRef={(input) => { this.widthSectionRef = input; }}
 							onInput={(value) => { this.setState({ widthSection: value }); }} />
 
-						<InputTemplate title={`Глубина отстаиваемого слоя воды, м, диапазон[${OilTrapSource.SectionDeep.min} - ${OilTrapSource.SectionDeep.max}]`}
+						<InputTemplate title={`Глубина отстаиваемого слоя воды, м, диапазон [${OilTrapSource.SectionDeep.min} - ${OilTrapSource.SectionDeep.max}]`}
 							range={{ minValue: OilTrapSource.SectionDeep.min, maxValue: OilTrapSource.SectionDeep.max }}
 							placeholder={'Введите глубину отстаиваемого слоя воды...'}
 							onErrorExist={(isError) => { this.setState({ isValidateError: isError }); }}
@@ -201,13 +198,13 @@ export class OilTrapComponent extends React.Component<OilTrapProps, OilTrapState
 				{type === OilTrapTypes.horizontal
 					? <>
 						<InputTemplate title={`Гидравлическая крупность частиц нефти, мм/с,
-							диапазон[${OilTrapSource.HydraulicParticleSize.min} - ${OilTrapSource.HydraulicParticleSize.max}]`}
+							диапазон [${OilTrapSource.HydraulicParticleSize.min} - ${OilTrapSource.HydraulicParticleSize.max}]`}
 							range={{ minValue: OilTrapSource.HydraulicParticleSize.min, maxValue: OilTrapSource.HydraulicParticleSize.max }}
 							placeholder={'Введите гидравлическую крупность частиц нефти...'}
 							onErrorExist={(isError) => { this.setState({ isValidateError: isError }); }}
 							onInputRef={(input) => { this.hydraulicParticleSizeRef = input; }}
 							onInput={(value) => { this.setState({ hydraulicParticleSize: value }); }} />
-						<InputTemplate title={`Скорость движения воды, мм/с, диапазон[${OilTrapSource.WaterSpeed.min} - ${OilTrapSource.WaterSpeed.max}]`}
+						<InputTemplate title={`Скорость движения воды, мм/с, диапазон [${OilTrapSource.WaterSpeed.min} - ${OilTrapSource.WaterSpeed.max}]`}
 							range={{ minValue: OilTrapSource.WaterSpeed.min, maxValue: OilTrapSource.WaterSpeed.max }}
 							placeholder={'Введите скорость движения воды...'}
 							onErrorExist={(isError) => { this.setState({ isValidateError: isError }); }}
@@ -216,8 +213,8 @@ export class OilTrapComponent extends React.Component<OilTrapProps, OilTrapState
 					</>
 					: null}
 
-				{this.layPeriod < this.periodUpOilParticle
-					? <ErrorAlert errorMessage={`Продолжительность отстаивания: ${this.layPeriod},
+				{this.layPeriod <= this.periodUpOilParticle
+					? <ErrorAlert errorMessage={`Продолжительность отстаивания: ${this.layPeriod.toFixed(2)},
 						должна быть не менее продолжительности всплывания нефтяных частиц: ${this.periodUpOilParticle}.
 						Для урегулирования можно изменить глубину слоя или скорость движения воды.`} />
 					: null}
@@ -227,7 +224,7 @@ export class OilTrapComponent extends React.Component<OilTrapProps, OilTrapState
 					onSelectRef={(optionList) => { this.sedimentTypeListRef = optionList; }} />
 
 				<InputTemplate title={`Эффект задержания осаждающихся примесей, %,
-					диапазон[${OilTrapSource.ImpurityEffectBlock.min} - ${type === OilTrapTypes.horizontal
+					диапазон [${OilTrapSource.ImpurityEffectBlock.min} - ${type === OilTrapTypes.horizontal
 						? OilTrapSource.ImpurityEffectBlock.max_horizontal
 						: OilTrapSource.ImpurityEffectBlock.max_radial}]`}
 					range={{
@@ -255,7 +252,7 @@ export class OilTrapComponent extends React.Component<OilTrapProps, OilTrapState
 					onInput={(value) => { this.setState({ oilBaseConcentrate: value }); }} />
 
 				{oilBaseConcentrate
-					? <InputTemplate title={`Концентрация нефтепродуктов в осветленой воде, мг/л, диапазон[0 - ${oilBaseConcentrate}]`}
+					? <InputTemplate title={`Концентрация нефтепродуктов в осветленой воде, мг/л, диапазон [0 - ${oilBaseConcentrate}]`}
 							range={{ minValue: 0, maxValue: oilBaseConcentrate }}
 							placeholder={'Введите концентрацию нефтепродуктов в осветленой воде...'}
 							onErrorExist={(isError) => { this.setState({ isValidateError: isError }); }}
@@ -264,7 +261,7 @@ export class OilTrapComponent extends React.Component<OilTrapProps, OilTrapState
 					: null}
 
 				{type === OilTrapTypes.radial
-					? <InputTemplate title={`Высота борта над слоем воды, м, диапазон[${OilTrapSource.borderHeight.min} - ${OilTrapSource.borderHeight.max}]`}
+					? <InputTemplate title={`Высота борта над слоем воды, м, диапазон [${OilTrapSource.borderHeight.min} - ${OilTrapSource.borderHeight.max}]`}
 						range={{ minValue: OilTrapSource.borderHeight.min, maxValue: OilTrapSource.borderHeight.max }}
 						placeholder={'Введите высота борта над слоем воды...'}
 						onErrorExist={(isError) => { this.setState({ isValidateError: isError }); }}
@@ -353,8 +350,25 @@ export class OilTrapComponent extends React.Component<OilTrapProps, OilTrapState
 		this.props.onResultMode(true);
 	}
 
+	private openChangeScheme = () => {
+		this.setState({showChangeScheme: true});
+	}
+
+	private closeChangeScheme = () => {
+		this.setState({showChangeScheme: false});
+	}
+
+	private openShowResult = () => {
+		this.setState({showOpenResult: true});
+	}
+
+	private closeShowResult = () => {
+		this.setState({showOpenResult: false});
+	}
+
 	render() {
-		const { type } = this.props;
+		const { type, secondMaxFlow, dailyWaterFlow } = this.props;
+		const { showChangeScheme, showOpenResult } = this.state;
 		return (
 			<>
 				<div className={'title-container'}>
@@ -364,11 +378,17 @@ export class OilTrapComponent extends React.Component<OilTrapProps, OilTrapState
 					{renderToolbar(
 						this.returnToScheme,
 						this.goToResult,
+						this.openChangeScheme,
+						this.closeChangeScheme,
+						this.openShowResult,
+						this.closeShowResult,
+						showChangeScheme,
+						showOpenResult,
 					)}
 				</div>
 				<div className={'device-container'}>
 					<div className={'device-input'}>
-						{this.renderBaseData()}
+						{renderBaseData(secondMaxFlow, dailyWaterFlow)}
 						{this.renderInputArea()}
 					</div>
 					<div className={'device-result'}>

@@ -70,7 +70,7 @@ export class StartPage extends React.Component<{}, {}> {
 						</Row>
 						<Row>
 							<Col md={{ span: 2, offset: 3 }}>
-								{this.renderCard('Использование современных технологий', USE_MODERN_TECHNOLOGY, 'fa fa-laptop')}
+								{this.renderCard('Свободный доступ', USE_MODERN_TECHNOLOGY, 'fa fa-laptop')}
 							</Col>
 							<Col md={{ span: 2 }}>
 								{this.renderCard('Меньшие временные затраты', LESS_TIME_SPARE, 'fa fa-clock-o')}
@@ -83,7 +83,8 @@ export class StartPage extends React.Component<{}, {}> {
 				</div>
 				<div className='quote-image'>
 					<div className='intro-box-quote'>
-						<Container fluid>
+						{/* Quote, maybe will return */}
+						{/* <Container fluid>
 							<Row>
 								<Col md={{ span: 12 }}>
 									<div className='quote-symbol'></div>
@@ -91,7 +92,7 @@ export class StartPage extends React.Component<{}, {}> {
 									<div className='quote-author'>Уистен Хью Оден</div>
 								</Col>
 							</Row>
-						</Container>
+						</Container> */}
 					</div>
 				</div>
 				<div id='app-occurs'>
@@ -130,28 +131,29 @@ export class StartPage extends React.Component<{}, {}> {
 						</Row>
 					</Container>
 				</div>
-				<Container fluid>
+				{/* social net, for future */}
+				{/* <Container fluid>
 					<Row>
 					<Col md={{ span: 12 }}>
 						<div className='social-icons'>
 							<ul>
-								<a href='https://www.facebook.com/slatulyaa'>
+								<a href='https://www.facebook.com/antoninikolaeva'>
 									<i className='fab fa-facebook-square social-icon'></i>
 								</a>
-								<a href='https://twitter.com/slatulyaa'>
+								<a href='https://twitter.com/antoninikolaeva'>
 									<i className='fab fa-twitter-square social-icon'></i>
 								</a>
-								<a href='http://instagram.com/slatulyaa'>
+								<a href='http://instagram.com/antoninikolaeva'>
 									<i className='fab fa-instagram-square social-icon'></i>
 								</a>
 							</ul>
 						</div>
 					</Col>
 					</Row>
-				</Container>
+				</Container> */}
 				<div className='footer'>
 					<span className='footer-text'>Выполнено</span>
-					<a href='https://vk.com/slatulyaa' className='vk-link'> Антониной Николаевой</a>
+					<a href='https://vk.com/antoninikolaeva' className='vk-link'> Антониной Николаевой</a>
 				</div>
 			</div>
 		);
@@ -159,17 +161,19 @@ export class StartPage extends React.Component<{}, {}> {
 }
 
 const ABOUT_APP = `Современный мир постоянно модернизируется и автоматизируется.
-	Подбор и строительство очистных сооружений - сложный, долговременный и кропотливый процесс.
+	Подбор и строительство очистных сооружений — сложный, долговременный и кропотливый процесс.
 	Данное приложение создано для упрощения математических расчетов инженеров
 	в процессе проектирования механических очистных сооружений.`;
 
-const USE_MODERN_TECHNOLOGY = `Современные IT-технологии .............`;
-const LESS_TIME_SPARE = `Не нужно выполнять расчеты 'вручную' - компьютер сделает все за Вас.`;
-const VISUALIZATION = `Работать с приятным интерфейсом комфортно, подсказки помогут соориентироваться в
-	расчете.`;
+const USE_MODERN_TECHNOLOGY = `Для работы с веб-приложением не нужно сторонних специфических
+	программ - для начала работы достаточно доступа в интернет и браузера`;
+const LESS_TIME_SPARE = `Не нужно выполнять расчеты "вручную" - программа сделает это за Вас`;
+const VISUALIZATION = `Работать с приятным интерфейсом комфортно, подсказки помогут сориентироваться в
+	расчете`;
 
-const SINGLE_COUNTING = `Вы можете рассчитать какой-то один конкретный аппарат.`;
+const SINGLE_COUNTING = `Вы можете рассчитать один конкретный аппарат`;
 const SYSTEM_COUNTING = `Если Вам необходимо рассчитать систему очистных соооружений, Вы можете выбрать
-	необходимые позиции и произвести расчет.`;
-const LAW_EQUALS = `Если Ваши 'желания' не будут соответствовать действующему СНИПу, мы подскажем Вам об
-	этом.`;
+	необходимые позиции и произвести расчет`;
+const LAW_EQUALS = `Если Ваши "желания" не будут соответствовать действующему 
+	СП 33.13330.2012 Канализация. Наружные сети и сооружения, приложение Вам об
+	этом скажет`;
